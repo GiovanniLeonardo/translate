@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Impara - Universal 80/20 & Custom Translator</title>
+    <title>Impara Ultimate - 80/20 Language Engine</title>
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@0.344.0/font/lucide.min.js"></script>
     <style>
         :root {
@@ -15,6 +15,7 @@
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
             --border: #374151;
+            --error: #ef4444;
         }
 
         * {
@@ -35,42 +36,48 @@
 
         header {
             background-color: var(--bg-surface);
-            padding: 16px;
+            padding: 12px 16px;
             text-align: center;
             border-bottom: 1px solid var(--border);
         }
 
         .lang-control-row {
-            margin-top: 12px;
+            margin-top: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 8px;
-            flex-wrap: wrap;
+            width: 100%;
         }
 
-        select.lang-dropdown, .btn-action {
+        select.lang-dropdown {
             background-color: var(--bg-card);
             color: var(--text-main);
             border: 1px solid var(--border);
-            padding: 8px 14px;
+            padding: 8px 12px;
             border-radius: 8px;
             font-size: 0.9rem;
             outline: none;
             cursor: pointer;
             font-weight: 600;
+            flex: 1;
+            max-width: 220px;
         }
 
         .btn-action {
             background-color: var(--accent-dim);
             color: var(--accent);
-            border-color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
             display: flex;
             align-items: center;
             gap: 4px;
         }
 
-        /* Dynamic Modal / Creator Panel */
         .creator-panel {
             display: none;
             background-color: var(--bg-surface);
@@ -78,14 +85,13 @@
             border-radius: 16px;
             padding: 16px;
             margin: 10px auto;
-            max-width: 400px;
+            max-width: 100%;
             flex-direction: column;
             gap: 10px;
             text-align: left;
         }
 
         .creator-panel.active { display: flex; }
-
         .creator-panel input {
             background-color: var(--bg-primary);
             border: 1px solid var(--border);
@@ -93,13 +99,14 @@
             padding: 8px;
             border-radius: 6px;
             outline: none;
+            font-size: 0.9rem;
         }
 
         .app-container {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
-            padding-bottom: 90px;
+            padding: 16px;
+            padding-bottom: 95px;
         }
 
         .view-section { display: none; }
@@ -107,10 +114,10 @@
 
         .chip-container {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             overflow-x: auto;
             padding-bottom: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             scrollbar-width: none;
         }
         .chip-container::-webkit-scrollbar { display: none; }
@@ -118,9 +125,9 @@
         .chip {
             background-color: var(--bg-card);
             color: var(--text-muted);
-            padding: 8px 16px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             white-space: nowrap;
             cursor: pointer;
             border: 1px solid transparent;
@@ -133,45 +140,45 @@
             font-weight: 600;
         }
 
-        .vocab-grid { display: flex; flex-direction: column; gap: 12px; }
+        .vocab-grid { display: flex; flex-direction: column; gap: 10px; }
 
         .vocab-card {
             background-color: var(--bg-surface);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 16px;
+            border-radius: 14px;
+            padding: 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .vocab-info h3 { font-size: 1.15rem; font-weight: 600; }
-        .vocab-info p { font-size: 0.9rem; color: var(--text-muted); margin-top: 4px; }
+        .vocab-info h3 { font-size: 1.05rem; font-weight: 600; }
+        .vocab-info p { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
 
-        .audio-actions { display: flex; gap: 8px; }
+        .audio-actions { display: flex; gap: 6px; }
 
         .btn-audio {
             background-color: var(--bg-card);
             border: 1px solid var(--border);
             color: var(--text-main);
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 1.25rem;
+            font-size: 1.15rem;
         }
 
         .translator-box {
             background-color: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 24px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
         }
 
         .mode-selector {
@@ -187,8 +194,8 @@
             background: none;
             border: none;
             color: var(--text-muted);
-            padding: 12px;
-            font-size: 0.85rem;
+            padding: 12px 6px;
+            font-size: 0.8rem;
             font-weight: 700;
             border-radius: 8px;
             cursor: pointer;
@@ -201,13 +208,13 @@
         }
 
         .stream-display, .translation-output {
-            min-height: 90px;
+            min-height: 85px;
             background-color: var(--bg-primary);
             border-radius: 12px;
-            padding: 14px;
+            padding: 12px;
             border: 1px solid var(--border);
-            font-size: 1.05rem;
-            line-height: 1.5;
+            font-size: 1rem;
+            line-height: 1.4;
         }
 
         .translation-output {
@@ -221,12 +228,11 @@
             flex-direction: column;
             align-items: center;
             gap: 8px;
-            margin-top: 8px;
         }
 
         .btn-mic {
-            width: 76px;
-            height: 76px;
+            width: 72px;
+            height: 72px;
             border-radius: 50%;
             background-color: var(--bg-card);
             border: 2px solid var(--border);
@@ -245,35 +251,69 @@
             animation: pulse 1.4s infinite;
         }
 
+        /* Responsive Mobile SRS Layout */
+        .srs-card-box {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 16px;
+            text-align: center;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .srs-word-display { font-size: 1.8rem; font-weight: 700; margin-bottom: 12px; word-break: break-word; }
+        .srs-trans-display { font-size: 1.25rem; color: var(--accent); font-weight: 600; display: none; }
+        .srs-hint { font-size: 0.8rem; color: var(--text-muted); position: absolute; bottom: 16px; }
+
+        .srs-buttons-row { display: flex; gap: 10px; width: 100%; justify-content: center; }
+        .srs-btn {
+            flex: 1; padding: 14px 8px; border: none; border-radius: 12px;
+            font-weight: 700; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .srs-btn.wrong { background-color: var(--error); color: #fff; }
+        .srs-btn.correct { background-color: var(--accent); color: #121214; }
+
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.04); }
             100% { transform: scale(1); }
         }
 
+        /* Strictly Uniform Tab Bar Navigation Grid */
         nav.tab-bar {
             position: fixed;
             bottom: 0; left: 0; right: 0;
-            height: 70px;
+            height: 75px;
             background-color: var(--bg-surface);
             border-top: 1px solid var(--border);
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             align-items: center;
-            z-index: 100;
+            z-index: 200;
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         .tab-item {
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             color: var(--text-muted);
             background: none;
             border: none;
             cursor: pointer;
             gap: 4px;
             font-size: 0.75rem;
-            width: 50%;
+            width: 33.33% !important;
+            height: 100%;
         }
 
         .tab-item.active { color: var(--accent); }
@@ -282,44 +322,38 @@
 <body>
 
     <header>
-        <h1>Impara Matrix</h1>
+        <h2 style="font-size: 1.15rem; font-weight: 700;">Gio's Translate Engine</h2>
         <div class="lang-control-row">
             <select id="lang-select" class="lang-dropdown" onchange="handleLanguageChange()">
-                <option value="it">🇮🇹 Italiano (Italian)</option>
-                <option value="pt">🇧🇷 Português (Brazilian)</option>
-                <option value="hu">🇭🇺 Magyar (Hungarian)</option>
-                <option value="es">🇪🇸 Español (Spanish)</option>
-                <option value="fr">🇫🇷 Français (French)</option>
-                <option value="de">🇩🇪 Deutsch (German)</option>
-                <option value="ja">🇯🇵 日本語 (Japanese)</option>
-                <option value="zh">🇨🇳 中文 (Chinese)</option>
+                <!-- Populated dynamically -->
             </select>
             <button class="btn-action" onclick="toggleCreatorPanel()"><i class="lucide-plus" style="font-size: 14px"></i> Custom</button>
         </div>
 
-        <!-- Hidden Injector Matrix Block -->
         <div id="creator-panel" class="creator-panel">
-            <h4 style="font-size:0.9rem; margin-bottom:4px;">Add Custom Language Matrix</h4>
+            <h4 style="font-size:0.85rem; margin-bottom:4px;">Add Custom Language</h4>
             <input type="text" id="new-lang-name" placeholder="Language Name (e.g. Greek)">
             <input type="text" id="new-lang-flag" placeholder="Flag Emoji (e.g. 🇬🇷)">
             <input type="text" id="new-lang-locale" placeholder="Locale Code (e.g. el-GR)">
-            <button class="btn-action" style="background-color:var(--accent); color:#121214; justify-content:center;" onclick="createNewLanguage()">Save to Engine</button>
+            <button class="btn-action" style="background-color:var(--accent); color:#121214; justify-content:center; margin-top:4px;" onclick="createNewLanguage()">Save to Engine</button>
         </div>
     </header>
 
     <div class="app-container">
-        <!-- 80/20 VOCABULARY VIEW -->
+        <!-- TAB 1: LEXICON LIST -->
         <section id="vocab-view" class="view-section active">
             <div class="chip-container">
                 <div class="chip active" onclick="filterVocab('all', this)">All</div>
                 <div class="chip" onclick="filterVocab('essentials', this)">Essentials</div>
                 <div class="chip" onclick="filterVocab('greetings', this)">Greetings</div>
                 <div class="chip" onclick="filterVocab('small-talk', this)">Small Talk</div>
+                <div class="chip" onclick="filterVocab('directions', this)">Travel</div>
+                <div class="chip" onclick="filterVocab('emergencies', this)">Emergencies</div>
             </div>
             <div class="vocab-grid" id="vocab-list"></div>
         </section>
 
-        <!-- LIVE INTERACTIVE MIC TRANSLATOR -->
+        <!-- TAB 2: INTERACTIVE LIVE TRANSLATOR -->
         <section id="translate-view" class="view-section">
             <div class="translator-box">
                 <div class="mode-selector">
@@ -328,107 +362,150 @@
                 </div>
                 
                 <div>
-                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;" id="speech-label">Spoken Audio Input:</span>
+                    <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;" id="speech-label">Spoken Audio Input:</span>
                     <div class="stream-display" id="speech-input-display">Tap mic below and speak...</div>
                 </div>
 
                 <div>
-                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Translated Output (Auto-Speaks):</span>
+                    <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Translated Output (Audio Active):</span>
                     <div class="translation-output" id="translation-output-display">Translation will print & speak...</div>
                 </div>
 
                 <div class="mic-container">
                     <button class="btn-mic" id="mic-trigger" onclick="toggleListening()">
-                        <i class="lucide-mic" style="font-size: 30px;"></i>
+                        <i class="lucide-mic" style="font-size: 28px;"></i>
                     </button>
-                    <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;" id="mic-status-text">Microphone Ready</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;" id="mic-status-text">Microphone Ready</span>
                 </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: SRS CARD GAME -->
+        <section id="srs-view" class="view-section">
+            <div class="srs-card-box" onclick="revealSRSElement()">
+                <div class="srs-word-display" id="srs-target-word">Caricamento...</div>
+                <div class="srs-trans-display" id="srs-translation-word">Loading...</div>
+                <div class="srs-hint" id="srs-hint-text">Tap card to flip reveal</div>
+            </div>
+            <div class="srs-buttons-row" id="srs-actions" style="display: none;">
+                <button class="srs-btn wrong" onclick="processSRSFeedback(false)">Drill Again 🔄</button>
+                <button class="srs-btn correct" onclick="processSRSFeedback(true)">Got It! ✅</button>
             </div>
         </section>
     </div>
 
     <nav class="tab-bar">
         <button class="tab-item active" onclick="switchView('vocab', this)">
-            <i class="lucide-book-open" style="font-size: 20px;"></i><span>80/20 Lexicon</span>
+            <i class="lucide-book-open" style="font-size: 20px;"></i>
+            <span>80/20 Lexicon</span>
         </button>
         <button class="tab-item" onclick="switchView('translate', this)">
-            <i class="lucide-mic" style="font-size: 20px;"></i><span>Live Session</span>
+            <i class="lucide-mic" style="font-size: 20px;"></i>
+            <span>Live Session</span>
+        </button>
+        <button class="tab-item" onclick="switchView('srs', this)">
+            <i class="lucide-brain-circuit" style="font-size: 20px;"></i>
+            <span>SRS Trainer</span>
         </button>
     </nav>
 
     <script>
-        // Core Languages Base Map Array Matrix
-        let baseLanguageMatrix = {
+        // Massive Deeply-Expanded 80/20 Multi-Language Database Array Matrix
+        const coreLanguageMatrix = {
             it: {
-                name: "Italian", locale: "it-IT", flag: "🇮🇹",
+                name: "Italiano (Italian)", locale: "it-IT", flag: "🇮🇹",
                 vocab: [
                     { it: "Sì", en: "Yes", cat: "essentials" }, { it: "No", en: "No", cat: "essentials" },
                     { it: "Per favore", en: "Please", cat: "essentials" }, { it: "Grazie mille", en: "Thank you very much", cat: "essentials" },
+                    { it: "Prego", en: "You're welcome", cat: "essentials" }, { it: "Il conto, per favore", en: "The bill, please", cat: "essentials" },
+                    { it: "Quanto costa?", en: "How much does it cost?", cat: "essentials" }, { it: "Vorrei questo", en: "I would like this", cat: "essentials" },
+                    { it: "Posso pagare con carta?", en: "Can I pay by card?", cat: "essentials" }, { it: "Dov'è il bagno?", en: "Where is the bathroom?", cat: "directions" },
                     { it: "Ciao", en: "Hello / Goodbye", cat: "greetings" }, { it: "Buongiorno", en: "Good morning", cat: "greetings" },
-                    { it: "Come stai?", en: "How are you?", cat: "small-talk" }, { it: "Mi chiamo...", en: "My name is...", cat: "small-talk" }
+                    { it: "Buonasera", en: "Good evening", cat: "greetings" }, { it: "Arrivederci", en: "Goodbye (formal)", cat: "greetings" },
+                    { it: "Ci vediamo presto", en: "See you soon", cat: "greetings" }, { it: "Buona giornata", en: "Have a nice day", cat: "greetings" },
+                    { it: "Come stai?", en: "How are you?", cat: "small-talk" }, { it: "Bene, e tu?", en: "Good, and you?", cat: "small-talk" },
+                    { it: "Mi chiamo...", en: "My name is...", cat: "small-talk" }, { it: "Piacere di conoscerti", en: "Nice to meet you", cat: "small-talk" },
+                    { it: "Parla inglese?", en: "Do you speak English?", cat: "small-talk" }, { it: "Non capisco", en: "I don't understand", cat: "small-talk" },
+                    { it: "Di dove sei?", en: "Where are you from?", cat: "small-talk" }, { it: "Che lavoro fai?", en: "What is your job?", cat: "small-talk" },
+                    { it: "Mi piace molto questo posto", en: "I really like this place", cat: "small-talk" },
+                    { it: "Dov'è la stazione?", en: "Where is the station?", cat: "directions" }, { it: "Dritto e poi a destra", en: "Straight ahead and then right", cat: "directions" },
+                    { it: "A sinistra", en: "To the left", cat: "directions" }, { it: "Dov'è l'hotel?", en: "Where is the hotel?", cat: "directions" },
+                    { it: "È lontano da qui?", en: "Is it far from here?", cat: "directions" }, { it: "Prenda un taxi", en: "Take a taxi", cat: "directions" },
+                    { it: "Aiuto!", en: "Help!", cat: "emergencies" }, { it: "Chiamate un'ambulanza", en: "Call an ambulance", cat: "emergencies" },
+                    { it: "Ho perso il mio passaporto", en: "I lost my passport", cat: "emergencies" }, { it: "Mi serve un medico", en: "I need a doctor", cat: "emergencies" },
+                    { it: "Mi sono perso", en: "I am lost", cat: "emergencies" }, { it: "Attenzione!", en: "Look out! / Warning!", cat: "emergencies" }
                 ]
             },
             pt: {
-                name: "Brazilian Portuguese", locale: "pt-BR", flag: "🇧🇷",
+                name: "Português (Brazilian)", locale: "pt-BR", flag: "🇧🇷",
                 vocab: [
                     { it: "Sim", en: "Yes", cat: "essentials" }, { it: "Não", en: "No", cat: "essentials" },
                     { it: "Por favor", en: "Please", cat: "essentials" }, { it: "Muito obrigado", en: "Thank you very much", cat: "essentials" },
+                    { it: "De nada", en: "You're welcome", cat: "essentials" }, { it: "A conta, por favor", en: "The bill, please", cat: "essentials" },
+                    { it: "Quanto custa?", en: "How much is it?", cat: "essentials" }, { it: "Eu gostaria disto", en: "I would like this", cat: "essentials" },
+                    { it: "Aceita cartão?", en: "Do you accept cards?", cat: "essentials" }, { it: "Onde fica o banheiro?", en: "Where is the bathroom?", cat: "directions" },
                     { it: "Olá / Oi", en: "Hello / Hi", cat: "greetings" }, { it: "Bom dia", en: "Good morning", cat: "greetings" },
-                    { it: "Tudo bem?", en: "How are you?", cat: "small-talk" }, { it: "Meu nome é...", en: "My name is...", cat: "small-talk" }
+                    { it: "Boa noite", en: "Good evening", cat: "greetings" }, { it: "Tchau", en: "Goodbye", cat: "greetings" },
+                    { it: "Até logo", en: "See you later", cat: "greetings" }, { it: "Tenha um bom dia", en: "Have a nice day", cat: "greetings" },
+                    { it: "Tudo bem?", en: "How are you?", cat: "small-talk" }, { it: "Tudo bem, e você?", en: "Good, and you?", cat: "small-talk" },
+                    { it: "Meu nome é...", en: "My name is...", cat: "small-talk" }, { it: "Prazer em conhecer", en: "Nice to meet you", cat: "small-talk" },
+                    { it: "Você fala inglês?", en: "Do you speak English?", cat: "small-talk" }, { it: "Não entendi", en: "I don't understand", cat: "small-talk" },
+                    { it: "De onde você é?", en: "Where are you from?", cat: "small-talk" },
+                    { it: "Onde fica a estação?", en: "Where is the station?", cat: "directions" }, { it: "Siga em frente e vire à direita", en: "Go straight and turn right", cat: "directions" },
+                    { it: "Socorro!", en: "Help!", cat: "emergencies" }, { it: "Chame uma ambulância", en: "Call an ambulance", cat: "emergencies" },
+                    { it: "Perdi meu passaporte", en: "I lost my passport", cat: "emergencies" }, { it: "Preciso de um médico", en: "I need a doctor", cat: "emergencies" }
                 ]
             },
             hu: {
-                name: "Hungarian", locale: "hu-HU", flag: "🇭🇺",
+                name: "Magyar (Hungarian)", locale: "hu-HU", flag: "🇭🇺",
                 vocab: [
                     { it: "Igen", en: "Yes", cat: "essentials" }, { it: "Nem", en: "No", cat: "essentials" },
                     { it: "Kérem", en: "Please", cat: "essentials" }, { it: "Köszönöm szépen", en: "Thank you very much", cat: "essentials" },
+                    { it: "Szívesen", en: "You're welcome", cat: "essentials" }, { it: "A számlát kérem", en: "The bill, please", cat: "essentials" },
+                    { it: "Ez mennyibe kerül?", en: "How much does this cost?", cat: "essentials" }, { it: "Kártyával lehet fizetni?", en: "Can I pay with a card?", cat: "essentials" },
                     { it: "Szia", en: "Hello / Hi", cat: "greetings" }, { it: "Jó reggelt", en: "Good morning", cat: "greetings" },
-                    { it: "Hogy vagy?", en: "How are you?", cat: "small-talk" }, { it: "A nevem...", en: "My name is...", cat: "small-talk" }
+                    { it: "Jó estét", en: "Good evening", cat: "greetings" }, { it: "Viszontlátásra", en: "Goodbye", cat: "greetings" },
+                    { it: "Hogy vagy?", en: "How are you?", cat: "small-talk" }, { it: "Jól, és te?", en: "Good, and you?", cat: "small-talk" },
+                    { it: "A nevem...", en: "My name is...", cat: "small-talk" }, { it: "Örülök, hogy találkoztunk", en: "Nice to meet you", cat: "small-talk" },
+                    { it: "Beszél angolul?", en: "Do you speak English?", cat: "small-talk" }, { it: "Nem értem", en: "I don't understand", cat: "small-talk" },
+                    { it: "Merre van a mosdó?", en: "Where is the bathroom?", cat: "directions" }, { it: "Merre van a vasútállomás?", en: "Where is the station?", cat: "directions" },
+                    { it: "Egyenesen, majd jobbra", en: "Straight ahead then right", cat: "directions" },
+                    { it: "Segítség!", en: "Help!", cat: "emergencies" }, { it: "Hívjon mentőt", en: "Call an ambulance", cat: "emergencies" },
+                    { it: "Elvesztettem az útlevelemet", en: "I lost my passport", cat: "emergencies" }, { it: "Orvosra van szükségem", en: "I need a doctor", cat: "emergencies" }
                 ]
             },
             es: {
-                name: "Spanish", locale: "es-ES", flag: "编🇪🇸",
+                name: "Español (Spanish)", locale: "es-ES", flag: "🇪🇸",
                 vocab: [
                     { it: "Sí", en: "Yes", cat: "essentials" }, { it: "No", en: "No", cat: "essentials" },
                     { it: "Por favor", en: "Please", cat: "essentials" }, { it: "Muchas gracias", en: "Thank you very much", cat: "essentials" },
+                    { it: "La cuenta, por favor", en: "The bill, please", cat: "essentials" }, { it: "¿Cuánto cuesta?", en: "How much is it?", cat: "essentials" },
                     { it: "Hola", en: "Hello", cat: "greetings" }, { it: "Buenos días", en: "Good morning", cat: "greetings" },
-                    { it: "¿Cómo estás?", en: "How are you?", cat: "small-talk" }, { it: "Me llamo...", en: "My name is...", cat: "small-talk" }
+                    { it: "Buenas noches", en: "Good evening", cat: "greetings" }, { it: "Adiós", en: "Goodbye", cat: "greetings" },
+                    { it: "¿Cómo estás?", en: "How are you?", cat: "small-talk" }, { it: "Bien, ¿y tú?", en: "Good, and you?", cat: "small-talk" },
+                    { it: "Me llamo...", en: "My name is...", cat: "small-talk" }, { it: "Mucho gusto", en: "Nice to meet you", cat: "small-talk" },
+                    { it: "¿Habla inglés?", en: "Do you speak English?", cat: "small-talk" }, { it: "No entiendo", en: "I don't understand", cat: "small-talk" },
+                    { it: "¿Dónde está el baño?", en: "Where is the bathroom?", cat: "directions" }, { it: "¿Dónde está la estación?", en: "Where is the station?", cat: "directions" },
+                    { it: "Todo derecho y a la derecha", en: "Straight ahead and to the right", cat: "directions" },
+                    { it: "¡Ayuda!", en: "Help!", cat: "emergencies" }, { it: "Llame a una ambulancia", en: "Call an ambulance", cat: "emergencies" },
+                    { it: "Perdí mi pasaporte", en: "I lost my passport", cat: "emergencies" }, { it: "Necesito un médico", en: "I need a doctor", cat: "emergencies" }
                 ]
             },
             fr: {
-                name: "French", locale: "fr-FR", flag: "🇫🇷",
+                name: "Français (French)", locale: "fr-FR", flag: "🇫🇷",
                 vocab: [
                     { it: "Oui", en: "Yes", cat: "essentials" }, { it: "Non", en: "No", cat: "essentials" },
                     { it: "S'il vous plaît", en: "Please", cat: "essentials" }, { it: "Merci beaucoup", en: "Thank you very much", cat: "essentials" },
-                    { it: "Salut", en: "Hi / Bye", cat: "greetings" }, { it: "Bonjour", en: "Hello / Good morning", cat: "greetings" },
-                    { it: "Comment ça va?", en: "How are things?", cat: "small-talk" }, { it: "Je m'appelle...", en: "My name is...", cat: "small-talk" }
-                ]
-            },
-            de: {
-                name: "German", locale: "de-DE", flag: "🇩🇪",
-                vocab: [
-                    { it: "Ja", en: "Yes", cat: "essentials" }, { it: "Nein", en: "No", cat: "essentials" },
-                    { it: "Bitte", en: "Please", cat: "essentials" }, { it: "Danke schön", en: "Thank you very much", cat: "essentials" },
-                    { it: "Hallo", en: "Hello", cat: "greetings" }, { it: "Guten Morgen", en: "Good morning", cat: "greetings" },
-                    { it: "Wie geht es dir?", en: "How are you?", cat: "small-talk" }, { it: "Ich heiße...", en: "My name is...", cat: "small-talk" }
-                ]
-            },
-            ja: {
-                name: "Japanese", locale: "ja-JP", flag: "🇯🇵",
-                vocab: [
-                    { it: "はい (Hai)", en: "Yes", cat: "essentials" }, { it: "いいえ (Iie)", en: "No", cat: "essentials" },
-                    { it: "お願いします (Onegai shimasu)", en: "Please", cat: "essentials" }, { it: "ありがとうございます (Arigatou gozaimasu)", en: "Thank you very much", cat: "essentials" },
-                    { it: "こんにちは (Konnichiwa)", en: "Hello", cat: "greetings" }, { it: "おはようございます (Ohayou gozaimasu)", en: "Good morning", cat: "greetings" },
-                    { it: "お元気ですか (O-genki desu ka?)", en: "How are you?", cat: "small-talk" }, { it: "私の名前は... (Watashi no namae wa...)", en: "My name is...", cat: "small-talk" }
-                ]
-            },
-            zh: {
-                name: "Chinese", locale: "zh-CN", flag: "🇨🇳",
-                vocab: [
-                    { it: "是的 (Shì de)", en: "Yes", cat: "essentials" }, { it: "不是 (Bú shì)", en: "No", cat: "essentials" },
-                    { it: "请 (Qǐng)", en: "Please", cat: "essentials" }, { it: "非常感谢 (Fēicháng xièxiè)", en: "Thank you very much", cat: "essentials" },
-                    { it: "你好 (Nǐ hǎo)", en: "Hello", cat: "greetings" }, { it: "早上好 (Zǎoshang hǎo)", en: "Good morning", cat: "greetings" },
-                    { it: "你好吗？ (Nǐ hǎo ma?)", en: "How are you?", cat: "small-talk" }, { it: "我叫... (Wǒ jiào...)", en: "My name is...", cat: "small-talk" }
+                    { it: "L'addition, s'il vous plaît", en: "The bill, please", cat: "essentials" }, { it: "C'est combien?", en: "How much is it?", cat: "essentials" },
+                    { it: "Bonjour", en: "Hello", cat: "greetings" }, { it: "Bonsoir", en: "Good evening", cat: "greetings" },
+                    { it: "Au revoir", en: "Goodbye", cat: "greetings" }, { it: "Comment ça va?", en: "How are things?", cat: "small-talk" },
+                    { it: "Ça va bien, et toi?", en: "Fine, and you?", cat: "small-talk" }, { it: "Je m'appelle...", en: "My name is...", cat: "small-talk" },
+                    { it: "Enchanté", en: "Nice to meet you", cat: "small-talk" }, { it: "Parlez-vous anglais?", en: "Do you speak English?", cat: "small-talk" },
+                    { it: "Je ne comprends pas", en: "I don't understand", cat: "small-talk" },
+                    { it: "Où sont les toilettes?", en: "Where is the bathroom?", cat: "directions" }, { it: "Où est la gare?", en: "Where is the station?", cat: "directions" },
+                    { it: "Tout droit puis à droite", en: "Straight ahead then right", cat: "directions" },
+                    { it: "Aide-moi!", en: "Help me!", cat: "emergencies" }, { it: "Appelez une ambulance", en: "Call an ambulance", cat: "emergencies" },
+                    { it: "J'ai perdu mon passeport", en: "I lost my passport", cat: "emergencies" }, { it: "J'ai besoin d'un médecin", en: "I need a doctor", cat: "emergencies" }
                 ]
             }
         };
@@ -438,31 +515,34 @@
         let translationDirection = 'tgt-en'; 
         let recognition = null;
         let isListening = false;
+        let currentSRSIndex = 0;
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Absolute localized storage reset command array loop
+            localStorage.removeItem('custom_impara_matrix');
+            
             loadLanguagesEngine();
             updateLanguageInterface();
             initSpeechRecognition();
         });
 
-        // Pull core list mixed with custom configurations out of Local Storage context
         function loadLanguagesEngine() {
             const stored = localStorage.getItem('custom_impara_matrix');
             if (stored) {
                 languageData = JSON.parse(stored);
-                // Update selector drop-down to print user inclusions
-                const selector = document.getElementById('lang-select');
-                selector.innerHTML = '';
-                Object.keys(languageData).forEach(key => {
-                    const opt = document.createElement('option');
-                    opt.value = key;
-                    opt.innerText = `${languageData[key].flag} ${languageData[key].name}`;
-                    selector.appendChild(opt);
-                });
             } else {
-                languageData = baseLanguageMatrix;
+                languageData = coreLanguageMatrix;
                 localStorage.setItem('custom_impara_matrix', JSON.stringify(languageData));
             }
+            
+            const selector = document.getElementById('lang-select');
+            selector.innerHTML = '';
+            Object.keys(languageData).forEach(key => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.innerText = `${languageData[key].flag} ${languageData[key].name}`;
+                selector.appendChild(opt);
+            });
         }
 
         function toggleCreatorPanel() {
@@ -474,20 +554,16 @@
             const flag = document.getElementById('new-lang-flag').value.trim() || "🏳️";
             const locale = document.getElementById('new-lang-locale').value.trim() || "en-US";
             
-            if(!name) { alert("Please provide a language title identifier."); return; }
-            
+            if(!name) { alert("Provide a language name."); return; }
             const key = name.toLowerCase().substring(0, 3);
             
-            // Build dynamic high-yield template base structures
             languageData[key] = {
-                name: name,
-                locale: locale,
-                flag: flag,
+                name: name, locale: locale, flag: flag,
                 vocab: [
-                    { it: "[Custom Key 1]", en: "Yes", cat: "essentials" },
-                    { it: "[Custom Key 2]", en: "No", cat: "essentials" },
-                    { it: "[Custom Key 3]", en: "Hello", cat: "greetings" },
-                    { it: "[Custom Key 4]", en: "How are you?", cat: "small-talk" }
+                    { it: "Sì", en: "Yes", cat: "essentials" },
+                    { it: "No", en: "No", cat: "essentials" },
+                    { it: "Ciao / Hello", en: "Hello", cat: "greetings" },
+                    { it: "Come stai?", en: "How are you?", cat: "small-talk" }
                 ]
             };
 
@@ -496,8 +572,6 @@
             document.getElementById('lang-select').value = key;
             handleLanguageChange();
             toggleCreatorPanel();
-            
-            alert(`${name} has been added successfully! You can directly edit its dynamic translation files or vocabulary strings inside the local browser database.`);
         }
 
         function handleLanguageChange() {
@@ -511,6 +585,7 @@
             document.getElementById('btn-mode-tgt-en').innerText = `${currentConfig.flag} ${currentConfig.name.toUpperCase()} → 🇺🇸 EN`;
             document.getElementById('btn-mode-en-tgt').innerText = `🇺🇸 EN → ${currentConfig.flag} ${currentConfig.name.toUpperCase()}`;
             renderVocabulary('all');
+            initSRSReview();
         }
 
         function renderVocabulary(category) {
@@ -529,8 +604,8 @@
                         <p>${item.en}</p>
                     </div>
                     <div class="audio-actions">
-                        <button class="btn-audio" onclick="speak('${item.en}', 'en-US')" title="Speak English">🇺🇸</button>
-                        <button class="btn-audio" onclick="speak('${item.it}', '${languageData[currentLang].locale}')" title="Speak Target">${targetFlag}</button>
+                        <button class="btn-audio" onclick="speak('${item.en}', 'en-US')">🇺🇸</button>
+                        <button class="btn-audio" onclick="speak('${item.it}', '${languageData[currentLang].locale}')">${targetFlag}</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -546,8 +621,7 @@
         function speak(text, locale) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                const cleanText = text.replace(/\([^)]*\)/g, "");
-                const utterance = new SpeechSynthesisUtterance(cleanText);
+                const utterance = new SpeechSynthesisUtterance(text.replace(/\([^)]*\)/g, ""));
                 utterance.lang = locale;
                 utterance.rate = 0.9;
                 window.speechSynthesis.speak(utterance);
@@ -560,16 +634,37 @@
             tabElement.classList.add('active');
             document.getElementById(`${view}-view`).classList.add('active');
             if(isListening) toggleListening();
+            if(view === 'srs') initSRSReview();
+        }
+
+        function initSRSReview() {
+            const list = languageData[currentLang].vocab;
+            if(!list || list.length === 0) return;
+            currentSRSIndex = Math.floor(Math.random() * list.length);
+            
+            document.getElementById('srs-target-word').innerText = list[currentSRSIndex].it;
+            document.getElementById('srs-translation-word').innerText = list[currentSRSIndex].en;
+            
+            document.getElementById('srs-translation-word').style.display = 'none';
+            document.getElementById('srs-actions').style.display = 'none';
+            document.getElementById('srs-hint-text').innerText = "Tap card to flip reveal";
+        }
+
+        function revealSRSElement() {
+            document.getElementById('srs-translation-word').style.display = 'block';
+            document.getElementById('srs-actions').style.display = 'flex';
+            document.getElementById('srs-hint-text').innerText = "Rate your response quality:";
+            speak(languageData[currentLang].vocab[currentSRSIndex].it, languageData[currentLang].locale);
+        }
+
+        function processSRSFeedback(wasCorrect) {
+            initSRSReview();
         }
 
         function setTranslationMode(mode) {
             translationDirection = mode;
             document.getElementById('btn-mode-tgt-en').classList.toggle('active', mode === 'tgt-en');
             document.getElementById('btn-mode-en-tgt').classList.toggle('active', mode === 'en-tgt');
-            
-            document.getElementById('speech-label').innerText = mode === 'tgt-en' ? "Their Spoken Audio Input:" : "My Spoken English Input:";
-            document.getElementById('speech-input-display').innerText = "Tap mic to start...";
-            document.getElementById('translation-output-display').innerText = "Translation output...";
             if(isListening) { toggleListening(); toggleListening(); }
         }
 
@@ -592,14 +687,8 @@
                     await processLiveTranslation(resultText);
                 };
 
-                recognition.onerror = (e) => {
-                    document.getElementById('mic-status-text').innerText = `Status Error: Check mic permissions or HTTPS context.`;
-                    stopMicUI();
-                };
-
+                recognition.onerror = () => { stopMicUI(); };
                 recognition.onend = () => { stopMicUI(); };
-            } else {
-                document.getElementById('mic-status-text').innerText = "Speech input API unsupported on this browser version.";
             }
         }
 
@@ -621,26 +710,22 @@
 
         async function processLiveTranslation(text) {
             const outputElement = document.getElementById('translation-output-display');
-            outputElement.innerText = "Processing live network conversion...";
-
             const sourceLang = translationDirection === 'tgt-en' ? currentLang : 'en';
             const targetLang = translationDirection === 'tgt-en' ? 'en' : currentLang;
 
             try {
                 const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`);
                 const data = await response.json();
-                
                 if(data && data.responseData) {
                     const translation = data.responseData.translatedText;
                     outputElement.innerText = translation;
                     
-                    const outputLocale = translationDirection === 'tgt-en' ? 'en-US' : languageData[currentLang].locale;
-                    speak(translation, outputLocale);
-                } else {
-                    outputElement.innerText = "Translation lookup failure.";
+                    // Dual Mode execution - text printed, now voice output streams out natively
+                    const targetVoiceLocale = translationDirection === 'tgt-en' ? 'en-US' : languageData[currentLang].locale;
+                    speak(translation, targetVoiceLocale);
                 }
             } catch (error) {
-                outputElement.innerText = "Network engine bottleneck. Using matching parameters...";
+                outputElement.innerText = "Network conversion timeout. Speak clearly again.";
             }
         }
     </script>
