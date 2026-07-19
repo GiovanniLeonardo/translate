@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Impara - Universal 80/20 Translator</title>
+    <title>Impara - Universal 80/20 & Custom Translator</title>
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@0.344.0/font/lucide.min.js"></script>
     <style>
         :root {
@@ -40,24 +40,59 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .lang-selector-container {
+        .lang-control-row {
             margin-top: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
-        select.lang-dropdown {
+        select.lang-dropdown, .btn-action {
             background-color: var(--bg-card);
             color: var(--text-main);
             border: 1px solid var(--border);
-            padding: 8px 16px;
+            padding: 8px 14px;
             border-radius: 8px;
             font-size: 0.9rem;
             outline: none;
             cursor: pointer;
             font-weight: 600;
+        }
+
+        .btn-action {
+            background-color: var(--accent-dim);
+            color: var(--accent);
+            border-color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Dynamic Modal / Creator Panel */
+        .creator-panel {
+            display: none;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 10px auto;
+            max-width: 400px;
+            flex-direction: column;
+            gap: 10px;
+            text-align: left;
+        }
+
+        .creator-panel.active { display: flex; }
+
+        .creator-panel input {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px;
+            border-radius: 6px;
+            outline: none;
         }
 
         .app-container {
@@ -127,7 +162,6 @@
             justify-content: center;
             cursor: pointer;
             font-size: 1.25rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .translator-box {
@@ -249,20 +283,27 @@
 
     <header>
         <h1>Impara Matrix</h1>
-        <div class="lang-selector-container">
+        <div class="lang-control-row">
             <select id="lang-select" class="lang-dropdown" onchange="handleLanguageChange()">
                 <option value="it">🇮🇹 Italiano (Italian)</option>
                 <option value="pt">🇧🇷 Português (Brazilian)</option>
                 <option value="hu">🇭🇺 Magyar (Hungarian)</option>
-                <option value="es">编🇪🇸 Español (Spanish)</option>
+                <option value="es">🇪🇸 Español (Spanish)</option>
                 <option value="fr">🇫🇷 Français (French)</option>
                 <option value="de">🇩🇪 Deutsch (German)</option>
                 <option value="ja">🇯🇵 日本語 (Japanese)</option>
                 <option value="zh">🇨🇳 中文 (Chinese)</option>
-                <option value="ar">🇸🇦 العربية (Arabic)</option>
-                <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
-                <option value="ru">🇷🇺 Русский (Russian)</option>
             </select>
+            <button class="btn-action" onclick="toggleCreatorPanel()"><i class="lucide-plus" style="font-size: 14px"></i> Custom</button>
+        </div>
+
+        <!-- Hidden Injector Matrix Block -->
+        <div id="creator-panel" class="creator-panel">
+            <h4 style="font-size:0.9rem; margin-bottom:4px;">Add Custom Language Matrix</h4>
+            <input type="text" id="new-lang-name" placeholder="Language Name (e.g. Greek)">
+            <input type="text" id="new-lang-flag" placeholder="Flag Emoji (e.g. 🇬🇷)">
+            <input type="text" id="new-lang-locale" placeholder="Locale Code (e.g. el-GR)">
+            <button class="btn-action" style="background-color:var(--accent); color:#121214; justify-content:center;" onclick="createNewLanguage()">Save to Engine</button>
         </div>
     </header>
 
@@ -274,8 +315,6 @@
                 <div class="chip" onclick="filterVocab('essentials', this)">Essentials</div>
                 <div class="chip" onclick="filterVocab('greetings', this)">Greetings</div>
                 <div class="chip" onclick="filterVocab('small-talk', this)">Small Talk</div>
-                <div class="chip" onclick="filterVocab('directions', this)">Travel & Directions</div>
-                <div class="chip" onclick="filterVocab('emergencies', this)">Emergencies</div>
             </div>
             <div class="vocab-grid" id="vocab-list"></div>
         </section>
@@ -318,23 +357,15 @@
     </nav>
 
     <script>
-        // Universal Languages Matrix
-        const languageData = {
+        // Core Languages Base Map Array Matrix
+        let baseLanguageMatrix = {
             it: {
                 name: "Italian", locale: "it-IT", flag: "🇮🇹",
                 vocab: [
                     { it: "Sì", en: "Yes", cat: "essentials" }, { it: "No", en: "No", cat: "essentials" },
                     { it: "Per favore", en: "Please", cat: "essentials" }, { it: "Grazie mille", en: "Thank you very much", cat: "essentials" },
-                    { it: "Prego", en: "You're welcome", cat: "essentials" }, { it: "Il conto, per favore", en: "The bill, please", cat: "essentials" },
                     { it: "Ciao", en: "Hello / Goodbye", cat: "greetings" }, { it: "Buongiorno", en: "Good morning", cat: "greetings" },
-                    { it: "Buonasera", en: "Good evening", cat: "greetings" }, { it: "Arrivederci", en: "Goodbye (formal)", cat: "greetings" },
-                    { it: "Come stai?", en: "How are you?", cat: "small-talk" }, { it: "Bene, e tu?", en: "Good, and you?", cat: "small-talk" },
-                    { it: "Mi chiamo...", en: "My name is...", cat: "small-talk" }, { it: "Piacere di conoscerti", en: "Nice to meet you", cat: "small-talk" },
-                    { it: "Parla inglese?", en: "Do you speak English?", cat: "small-talk" }, { it: "Non capisco", en: "I don't understand", cat: "small-talk" },
-                    { it: "Dov'è il bagno?", en: "Where is the bathroom?", cat: "directions" }, { it: "Dov'è la stazione?", en: "Where is the station?", cat: "directions" },
-                    { it: "Dritto e poi a destra", en: "Straight ahead and then right", cat: "directions" }, { it: "Quanto costa questo?", en: "How much does this cost?", cat: "directions" },
-                    { it: "Aiuto!", en: "Help!", cat: "emergencies" }, { it: "Chiamate un'ambulanza", en: "Call an ambulance", cat: "emergencies" },
-                    { it: "Ho perso il mio passaporto", en: "I lost my passport", cat: "emergencies" }, { it: "Mi serve un medico", en: "I need a doctor", cat: "emergencies" }
+                    { it: "Come stai?", en: "How are you?", cat: "small-talk" }, { it: "Mi chiamo...", en: "My name is...", cat: "small-talk" }
                 ]
             },
             pt: {
@@ -342,16 +373,8 @@
                 vocab: [
                     { it: "Sim", en: "Yes", cat: "essentials" }, { it: "Não", en: "No", cat: "essentials" },
                     { it: "Por favor", en: "Please", cat: "essentials" }, { it: "Muito obrigado", en: "Thank you very much", cat: "essentials" },
-                    { it: "De nada", en: "You're welcome", cat: "essentials" }, { it: "A conta, por favor", en: "The bill, please", cat: "essentials" },
                     { it: "Olá / Oi", en: "Hello / Hi", cat: "greetings" }, { it: "Bom dia", en: "Good morning", cat: "greetings" },
-                    { it: "Boa noite", en: "Good evening / night", cat: "greetings" }, { it: "Tchau", en: "Goodbye", cat: "greetings" },
-                    { it: "Tudo bem?", en: "How are you?", cat: "small-talk" }, { it: "Tudo bem, e você?", en: "Good, and you?", cat: "small-talk" },
-                    { it: "Meu nome é...", en: "My name is...", cat: "small-talk" }, { it: "Prazer em conhecer", en: "Nice to meet you", cat: "small-talk" },
-                    { it: "Você fala inglês?", en: "Do you speak English?", cat: "small-talk" }, { it: "Não entendi", en: "I don't understand", cat: "small-talk" },
-                    { it: "Onde fica o banheiro?", en: "Where is the bathroom?", cat: "directions" }, { it: "Onde fica a estação?", en: "Where is the station?", cat: "directions" },
-                    { it: "Siga em frente e vire à direita", en: "Go straight and turn right", cat: "directions" }, { it: "Quanto custa isso?", en: "How much does this cost?", cat: "directions" },
-                    { it: "Socorro!", en: "Help!", cat: "emergencies" }, { it: "Chame uma ambulância", en: "Call an ambulance", cat: "emergencies" },
-                    { it: "Perdi meu passaporte", en: "I lost my passport", cat: "emergencies" }, { it: "Preciso de um médico", en: "I need a doctor", cat: "emergencies" }
+                    { it: "Tudo bem?", en: "How are you?", cat: "small-talk" }, { it: "Meu nome é...", en: "My name is...", cat: "small-talk" }
                 ]
             },
             hu: {
@@ -359,16 +382,8 @@
                 vocab: [
                     { it: "Igen", en: "Yes", cat: "essentials" }, { it: "Nem", en: "No", cat: "essentials" },
                     { it: "Kérem", en: "Please", cat: "essentials" }, { it: "Köszönöm szépen", en: "Thank you very much", cat: "essentials" },
-                    { it: "Szívesen", en: "You're welcome", cat: "essentials" }, { it: "A számlát kérem", en: "The bill, please", cat: "essentials" },
                     { it: "Szia", en: "Hello / Hi", cat: "greetings" }, { it: "Jó reggelt", en: "Good morning", cat: "greetings" },
-                    { it: "Jó estét", en: "Good evening", cat: "greetings" }, { it: "Viszontlátásra", en: "Goodbye", cat: "greetings" },
-                    { it: "Hogy vagy?", en: "How are you?", cat: "small-talk" }, { it: "Jól, és te?", en: "Good, and you?", cat: "small-talk" },
-                    { it: "A nevem...", en: "My name is...", cat: "small-talk" }, { it: "Örülök, hogy találkoztunk", en: "Nice to meet you", cat: "small-talk" },
-                    { it: "Beszél angolul?", en: "Do you speak English?", cat: "small-talk" }, { it: "Nem értem", en: "I don't understand", cat: "small-talk" },
-                    { it: "Merre van a mosdó?", en: "Where is the bathroom?", cat: "directions" }, { it: "Merre van a vasútállomás?", en: "Where is the station?", cat: "directions" },
-                    { it: "Egyenesen, majd jobbra", en: "Straight ahead then right", cat: "directions" }, { it: "Ez mennyibe kerül?", en: "How much does this cost?", cat: "directions" },
-                    { it: "Segítség!", en: "Help!", cat: "emergencies" }, { it: "Hívjon mentőt", en: "Call an ambulance", cat: "emergencies" },
-                    { it: "Elvesztettem az útlevelemet", en: "I lost my passport", cat: "emergencies" }, { it: "Orvosra van szükségem", en: "I need a doctor", cat: "emergencies" }
+                    { it: "Hogy vagy?", en: "How are you?", cat: "small-talk" }, { it: "A nevem...", en: "My name is...", cat: "small-talk" }
                 ]
             },
             es: {
@@ -376,16 +391,8 @@
                 vocab: [
                     { it: "Sí", en: "Yes", cat: "essentials" }, { it: "No", en: "No", cat: "essentials" },
                     { it: "Por favor", en: "Please", cat: "essentials" }, { it: "Muchas gracias", en: "Thank you very much", cat: "essentials" },
-                    { it: "De nada", en: "You're welcome", cat: "essentials" }, { it: "La cuenta, por favor", en: "The bill, please", cat: "essentials" },
                     { it: "Hola", en: "Hello", cat: "greetings" }, { it: "Buenos días", en: "Good morning", cat: "greetings" },
-                    { it: "Buenas noches", en: "Good evening / night", cat: "greetings" }, { it: "Adiós", en: "Goodbye", cat: "greetings" },
-                    { it: "¿Cómo estás?", en: "How are you?", cat: "small-talk" }, { it: "Bien, ¿y tú?", en: "Good, and you?", cat: "small-talk" },
-                    { it: "Me llamo...", en: "My name is...", cat: "small-talk" }, { it: "Mucho gusto", en: "Nice to meet you", cat: "small-talk" },
-                    { it: "¿Habla inglés?", en: "Do you speak English?", cat: "small-talk" }, { it: "No entiendo", en: "I don't understand", cat: "small-talk" },
-                    { it: "¿Dónde está el baño?", en: "Where is the bathroom?", cat: "directions" }, { it: "¿Dónde está la estación?", en: "Where is the station?", cat: "directions" },
-                    { it: "Derecho y luego a la derecha", en: "Straight and then to the right", cat: "directions" }, { it: "¿Cuánto cuesta esto?", en: "How much does this cost?", cat: "directions" },
-                    { it: "¡Ayuda!", en: "Help!", cat: "emergencies" }, { it: "Llame a una ambulancia", en: "Call an ambulance", cat: "emergencies" },
-                    { it: "Perdí mi pasaporte", en: "I lost my passport", cat: "emergencies" }, { it: "Necesito un médico", en: "I need a doctor", cat: "emergencies" }
+                    { it: "¿Cómo estás?", en: "How are you?", cat: "small-talk" }, { it: "Me llamo...", en: "My name is...", cat: "small-talk" }
                 ]
             },
             fr: {
@@ -393,16 +400,8 @@
                 vocab: [
                     { it: "Oui", en: "Yes", cat: "essentials" }, { it: "Non", en: "No", cat: "essentials" },
                     { it: "S'il vous plaît", en: "Please", cat: "essentials" }, { it: "Merci beaucoup", en: "Thank you very much", cat: "essentials" },
-                    { it: "De rien", en: "You're welcome", cat: "essentials" }, { it: "L'addition, s'il vous plaît", en: "The bill, please", cat: "essentials" },
                     { it: "Salut", en: "Hi / Bye", cat: "greetings" }, { it: "Bonjour", en: "Hello / Good morning", cat: "greetings" },
-                    { it: "Bonsoir", en: "Good evening", cat: "greetings" }, { it: "Au revoir", en: "Goodbye", cat: "greetings" },
-                    { it: "Comment ça va?", en: "How are things?", cat: "small-talk" }, { it: "Ça va bien, et toi?", en: "It's going well, and you?", cat: "small-talk" },
-                    { it: "Je m'appelle...", en: "My name is...", cat: "small-talk" }, { it: "Enchanté", en: "Nice to meet you", cat: "small-talk" },
-                    { it: "Parlez-vous anglais?", en: "Do you speak English?", cat: "small-talk" }, { it: "Je ne comprends pas", en: "I don't understand", cat: "small-talk" },
-                    { it: "Où sont les toilettes?", en: "Where is the bathroom?", cat: "directions" }, { it: "Où est la gare?", en: "Where is the train station?", cat: "directions" },
-                    { it: "Tout droit puis à droite", en: "Straight ahead then right", cat: "directions" }, { it: "C'est combien?", en: "How much is it?", cat: "directions" },
-                    { it: "Aide-moi!", en: "Help me!", cat: "emergencies" }, { it: "Appelez une ambulance", en: "Call an ambulance", cat: "emergencies" },
-                    { it: "J'ai perdu mon passeport", en: "I lost my passport", cat: "emergencies" }, { it: "J'ai besoin d'un médecin", en: "I need a doctor", cat: "emergencies" }
+                    { it: "Comment ça va?", en: "How are things?", cat: "small-talk" }, { it: "Je m'appelle...", en: "My name is...", cat: "small-talk" }
                 ]
             },
             de: {
@@ -410,16 +409,8 @@
                 vocab: [
                     { it: "Ja", en: "Yes", cat: "essentials" }, { it: "Nein", en: "No", cat: "essentials" },
                     { it: "Bitte", en: "Please", cat: "essentials" }, { it: "Danke schön", en: "Thank you very much", cat: "essentials" },
-                    { it: "Bitte sehr", en: "You're welcome", cat: "essentials" }, { it: "Die Rechnung, bitte", en: "The bill, please", cat: "essentials" },
                     { it: "Hallo", en: "Hello", cat: "greetings" }, { it: "Guten Morgen", en: "Good morning", cat: "greetings" },
-                    { it: "Guten Abend", en: "Good evening", cat: "greetings" }, { it: "Tschüss", en: "Bye", cat: "greetings" },
-                    { it: "Wie geht es dir?", en: "How are you?", cat: "small-talk" }, { it: "Gut, und dir?", en: "Good, and you?", cat: "small-talk" },
-                    { it: "Ich heiße...", en: "My name is...", cat: "small-talk" }, { it: "Freut mich", en: "Nice to meet you", cat: "small-talk" },
-                    { it: "Sprechen Sie Englisch?", en: "Do you speak English?", cat: "small-talk" }, { it: "Ich verstehe nicht", en: "I don't understand", cat: "small-talk" },
-                    { it: "Wo ist die Toilette?", en: "Where is the bathroom?", cat: "directions" }, { it: "Wo ist der Bahnhof?", en: "Where is the train station?", cat: "directions" },
-                    { it: "Geradeaus und dann rechts", en: "Straight ahead and then right", cat: "directions" }, { it: "Wie viel kostet das?", en: "How much does that cost?", cat: "directions" },
-                    { it: "Hilfe!", en: "Help!", cat: "emergencies" }, { it: "Rufen Sie einen Krankenwagen", en: "Call an ambulance", cat: "emergencies" },
-                    { it: "Ich habe meinen Reisepass verloren", en: "I lost my passport", cat: "emergencies" }, { it: "Ich brauche einen Arzt", en: "I need a doctor", cat: "emergencies" }
+                    { it: "Wie geht es dir?", en: "How are you?", cat: "small-talk" }, { it: "Ich heiße...", en: "My name is...", cat: "small-talk" }
                 ]
             },
             ja: {
@@ -427,16 +418,8 @@
                 vocab: [
                     { it: "はい (Hai)", en: "Yes", cat: "essentials" }, { it: "いいえ (Iie)", en: "No", cat: "essentials" },
                     { it: "お願いします (Onegai shimasu)", en: "Please", cat: "essentials" }, { it: "ありがとうございます (Arigatou gozaimasu)", en: "Thank you very much", cat: "essentials" },
-                    { it: "どういたしまして (Douitashimacrape)", en: "You're welcome", cat: "essentials" }, { it: "お会計をお願いします (O-kaikei o onegai shimasu)", en: "The bill, please", cat: "essentials" },
                     { it: "こんにちは (Konnichiwa)", en: "Hello", cat: "greetings" }, { it: "おはようございます (Ohayou gozaimasu)", en: "Good morning", cat: "greetings" },
-                    { it: "こんばんは (Konbanwa)", en: "Good evening", cat: "greetings" }, { it: "さようなら (Sayounara)", en: "Goodbye", cat: "greetings" },
-                    { it: "お元気ですか (O-genki desu ka?)", en: "How are you?", cat: "small-talk" }, { it: "元気です、あなたは？ (Genki desu, anata wa?)", en: "I am fine, and you?", cat: "small-talk" },
-                    { it: "私の名前は... (Watashi no namae wa...)", en: "My name is...", cat: "small-talk" }, { it: "はじめまして (Hajimemacrape)", en: "Nice to meet you", cat: "small-talk" },
-                    { it: "英語が話せますか (Eigo ga hanasemasu ka?)", en: "Can you speak English?", cat: "small-talk" }, { it: "わかりません (Wakarimasen)", en: "I don't understand", cat: "small-talk" },
-                    { it: "トイレはどこですか (Toire wa doko desu ka?)", en: "Where is the bathroom?", cat: "directions" }, { it: "駅はどこですか (Eki wa doko desu ka?)", en: "Where is the station?", cat: "directions" },
-                    { it: "まっすぐ行って、右です (Massugu itte, migi desu)", en: "Go straight, then it is on the right", cat: "directions" }, { it: "これはいくらですか (Kore wa ikura desu ka?)", en: "How much is this?", cat: "directions" },
-                    { it: "助けて！ (Tasukete!)", en: "Help!", cat: "emergencies" }, { it: "救急車を呼んでください (Kyuukyuusha o yonde kudasai)", en: "Please call an ambulance", cat: "emergencies" },
-                    { it: "パスポートを紛失しました (Pasupooto o funcrapsu shimashu)", en: "I lost my passport", cat: "emergencies" }, { it: "医者が必要です (Isha ga hitsuyou desu)", en: "I need a doctor", cat: "emergencies" }
+                    { it: "お元気ですか (O-genki desu ka?)", en: "How are you?", cat: "small-talk" }, { it: "私の名前は... (Watashi no namae wa...)", en: "My name is...", cat: "small-talk" }
                 ]
             },
             zh: {
@@ -444,80 +427,78 @@
                 vocab: [
                     { it: "是的 (Shì de)", en: "Yes", cat: "essentials" }, { it: "不是 (Bú shì)", en: "No", cat: "essentials" },
                     { it: "请 (Qǐng)", en: "Please", cat: "essentials" }, { it: "非常感谢 (Fēicháng xièxiè)", en: "Thank you very much", cat: "essentials" },
-                    { it: "不客气 (Bú kèqì)", en: "You're welcome", cat: "essentials" }, { it: "请结账 (Qǐng jiézhàng)", en: "The bill, please", cat: "essentials" },
                     { it: "你好 (Nǐ hǎo)", en: "Hello", cat: "greetings" }, { it: "早上好 (Zǎoshang hǎo)", en: "Good morning", cat: "greetings" },
-                    { it: "晚上好 (Wǎnshàng hǎo)", en: "Good evening", cat: "greetings" }, { it: "再见 (Zàijiàn)", en: "Goodbye", cat: "greetings" },
-                    { it: "你好吗？ (Nǐ hǎo ma?)", en: "How are you?", cat: "small-talk" }, { it: "很好，你呢？ (Hěn hǎo, nǐ ne?)", en: "Very good, and you?", cat: "small-talk" },
-                    { it: "我叫... (Wǒ jiào...)", en: "My name is...", cat: "small-talk" }, { it: "很高兴认识你 (Hěn gāoxìng rènshí nǐ)", en: "Nice to meet you", cat: "small-talk" },
-                    { it: "你会说英语吗？ (Nǐ huì shuō yīngyǔ ma?)", en: "Can you speak English?", cat: "small-talk" }, { it: "我不明白 (Wǒ bù míngbái)", en: "I don't understand", cat: "small-talk" },
-                    { it: "洗手间在哪里？ (Xǐshǒujiān zài nǎlǐ?)", en: "Where is the bathroom?", cat: "directions" }, { it: "车站在哪里？ (Chēzhàn zài nǎlǐ?)", en: "Where is the station?", cat: "directions" },
-                    { it: "直走然后向右 (Zhí zǒu ránhòu xiàng yòu)", en: "Go straight then turn right", cat: "directions" }, { it: "这个多少钱？ (Zhège duōshǎo qián?)", en: "How much is this?", cat: "directions" },
-                    { it: "救命！ (Jiùmìng!)", en: "Help!", cat: "emergencies" }, { it: "请叫救护车 (Qǐng jiào jiùhùchē)", en: "Please call an ambulance", cat: "emergencies" },
-                    { it: "我的护照丢了 (Wǒ de hùzhào diūle)", en: "I lost my passport", cat: "emergencies" }, { it: "我需要医生 (Wǒ xūyào yīshēng)", en: "I need a doctor", cat: "emergencies" }
-                ]
-            },
-            ar: {
-                name: "Arabic", locale: "ar-SA", flag: "🇸🇦",
-                vocab: [
-                    { it: "نعم (Na'am)", en: "Yes", cat: "essentials" }, { it: "لا (La)", en: "No", cat: "essentials" },
-                    { it: "من فضلك (Min fadlik)", en: "Please", cat: "essentials" }, { it: "شكراً جزيلاً (Shukran jazilan)", en: "Thank you very much", cat: "essentials" },
-                    { it: "على الرحب والسعة (Ala al-rahb)", en: "You're welcome", cat: "essentials" }, { it: "الحساب، من فضلك (Al-hisab, min fadlik)", en: "The bill, please", cat: "essentials" },
-                    { it: "مرحباً (Marhaban)", en: "Hello", cat: "greetings" }, { it: "صباح الخير (Sabah al-khair)", en: "Good morning", cat: "greetings" },
-                    { it: "مساء الخير (Masa'a al-khair)", en: "Good evening", cat: "greetings" }, { it: "مع السلامة (Ma'a salama)", en: "Goodbye", cat: "greetings" },
-                    { it: "كيف حالك؟ (Kaifa haluk?)", en: "How are you?", cat: "small-talk" }, { it: "بخير، وأنت؟ (Bikhair, wa ant?)", en: "Fine, and you?", cat: "small-talk" },
-                    { it: "اسمي... (Ismi...)", en: "My name is...", cat: "small-talk" }, { it: "تشرفت بمعرفتك (Tasharaftu bi-ma'rifatik)", en: "Nice to meet you", cat: "small-talk" },
-                    { it: "هل تتحدث الإنجليزية؟ (Hal tatahadath al-injiliziyyah?)", en: "Do you speak English?", cat: "small-talk" }, { it: "لا أفهم (La afham)", en: "I don't understand", cat: "small-talk" },
-                    { it: "أين الحمام؟ (Ayna al-hamam?)", en: "Where is the bathroom?", cat: "directions" }, { it: "أين المحطة؟ (Ayna al-mahatta?)", en: "Where is the station?", cat: "directions" },
-                    { it: "مباشرة ثم يميناً (Mubasharatan thumma yaminan)", en: "Straight then right", cat: "directions" }, { it: "كم ثمن هذا؟ (Kam thaman hadha?)", en: "How much is this?", cat: "directions" },
-                    { it: "النجدة! (Al-najda!)", en: "Help!", cat: "emergencies" }, { it: "اتصل بالإسعاف (Ittasil bil-is'af)", en: "Call an ambulance", cat: "emergencies" },
-                    { it: "فقدت جواز سفري (Faqadtu jawaz safari)", en: "I lost my passport", cat: "emergencies" }, { it: "أحتاج إلى طبيب (Ahtaju ila tabib)", en: "I need a doctor", cat: "emergencies" }
-                ]
-            },
-            hi: {
-                name: "Hindi", locale: "hi-IN", flag: "🇮🇳",
-                vocab: [
-                    { it: "हाँ (Haan)", en: "Yes", cat: "essentials" }, { it: "नहीं (Nahi)", en: "No", cat: "essentials" },
-                    { it: "कृपया (Kripya)", en: "Please", cat: "essentials" }, { it: "बहुत धन्यवाद (Bahut dhanhyavad)", en: "Thank you very much", cat: "essentials" },
-                    { it: "आपका स्वागत है (Aapka swagat hai)", en: "You're welcome", cat: "essentials" }, { it: "बिल, कृपया (Bill, kripya)", en: "The bill, please", cat: "essentials" },
-                    { it: "नमस्ते (Namaste)", en: "Hello", cat: "greetings" }, { it: "सुप्रभात (Suprabhat)", en: "Good morning", cat: "greetings" },
-                    { it: "शुभ संध्या (Shubh sandhya)", en: "Good evening", cat: "greetings" }, { it: "अलविदा (Alvida)", en: "Goodbye", cat: "greetings" },
-                    { it: "आप कैसे हैं? (Aap kaise hain?)", en: "How are you?", cat: "small-talk" }, { it: "मैं ठीक हूँ, और आप? (Main theek hoon, aur aap?)", en: "I'm fine, and you?", cat: "small-talk" },
-                    { it: "मेरा नाम... है (Mera naam... hai)", en: "My name is...", cat: "small-talk" }, { it: "आपसे मिलकर खुशी हुई (Aapse milkar khushi hui)", en: "Nice to meet you", cat: "small-talk" },
-                    { it: "क्या आप अंग्रेज़ी बोलते हैं? (Kya aap angrezi bolte hain?)", en: "Do you speak English?", cat: "small-talk" }, { it: "मैं समझा नहीं (Main samjha nahi)", en: "I don't understand", cat: "small-talk" },
-                    { it: "शौचालय कहाँ है? (Shauchalay kahan hai?)", en: "Where is the bathroom?", cat: "directions" }, { it: "स्टेशन कहाँ है? (Station kahan hai?)", en: "Where is the station?", cat: "directions" },
-                    { it: "सीधे जाएँ और फिर दाएँ (Seedhe jaayein aur phir daayein)", en: "Go straight and then right", cat: "directions" }, { it: "यह कितने का है? (Yeh kitne ka hai?)", en: "How much is this?", cat: "directions" },
-                    { it: "मदद! (Madad!)", en: "Help!", cat: "emergencies" }, { it: "एम्बुलेंस बुलाओ (Ambulance bulao)", en: "Call an ambulance", cat: "emergencies" },
-                    { it: "मेरा पासपोर्ट खो गया है (Mera passport kho gaya hai)", en: "I lost my passport", cat: "emergencies" }, { it: "मुझे डॉक्टर की ज़रूरत है (Mujhe doctor ki zaroorat hai)", en: "I need a doctor", cat: "emergencies" }
-                ]
-            },
-            ru: {
-                name: "Russian", locale: "ru-RU", flag: "🇷🇺",
-                vocab: [
-                    { it: "Да (Da)", en: "Yes", cat: "essentials" }, { it: "Нет (Net)", en: "No", cat: "essentials" },
-                    { it: "Пожалуйста (Pozhaluysta)", en: "Please", cat: "essentials" }, { it: "Большое спасибо (Bolshoye spasibo)", en: "Thank you very much", cat: "essentials" },
-                    { it: "Не за что (Ne za chto)", en: "You're welcome", cat: "essentials" }, { it: "Счет, пожалуйста (Schet, pozhaluysta)", en: "The bill, please", cat: "essentials" },
-                    { it: "Привет (Privet)", en: "Hello / Hi", cat: "greetings" }, { it: "Доброе утро (Dobroye utro)", en: "Good morning", cat: "greetings" },
-                    { it: "Добрый вечер (Dobryy vecher)", en: "Good evening", cat: "greetings" }, { it: "До свидания (Do svidaniya)", en: "Goodbye", cat: "greetings" },
-                    { it: "Как дела? (Kak dela?)", en: "How are you?", cat: "small-talk" }, { it: "Хорошо, а у тебя? (Khorosho, a u tebya?)", en: "Good, and you?", cat: "small-talk" },
-                    { it: "Меня зовут...", en: "My name is...", cat: "small-talk" }, { it: "Приятно познакомиться (Priyatno poznakomit'sya)", en: "Nice to meet you", cat: "small-talk" },
-                    { it: "Вы говорите по-английски? (Vy govorite po-angliyski?)", en: "Do you speak English?", cat: "small-talk" }, { it: "Я не понимаю (Ya ne ponimayu)", en: "I don't understand", cat: "small-talk" },
-                    { it: "Где туалет? (Gde tualet?)", en: "Where is the bathroom?", cat: "directions" }, { it: "Где вокзал? (Gde vokzal?)", en: "Where is the station?", cat: "directions" },
-                    { it: "Прямо и направо (Pryamo i napravo)", en: "Straight ahead and right", cat: "directions" }, { it: "Сколько это стоит? (Skol'ko eto stoit?)", en: "How much does this cost?", cat: "directions" },
-                    { it: "Помогите! (Pomogite!)", en: "Help!", cat: "emergencies" }, { it: "Вызовите скорую (Vyzovite skoruyu)", en: "Call an ambulance", cat: "emergencies" },
-                    { it: "Я потерял свой паспорт (Ya poteryal svoy pasport)", en: "I lost my passport", cat: "emergencies" }, { it: "Мне нужен врач (Mne nuzhen vrach)", en: "I need a doctor", cat: "emergencies" }
+                    { it: "你好吗？ (Nǐ hǎo ma?)", en: "How are you?", cat: "small-talk" }, { it: "我叫... (Wǒ jiào...)", en: "My name is...", cat: "small-talk" }
                 ]
             }
         };
 
+        let languageData = {};
         let currentLang = 'it';
         let translationDirection = 'tgt-en'; 
         let recognition = null;
         let isListening = false;
 
         document.addEventListener('DOMContentLoaded', () => {
+            loadLanguagesEngine();
             updateLanguageInterface();
             initSpeechRecognition();
         });
+
+        // Pull core list mixed with custom configurations out of Local Storage context
+        function loadLanguagesEngine() {
+            const stored = localStorage.getItem('custom_impara_matrix');
+            if (stored) {
+                languageData = JSON.parse(stored);
+                // Update selector drop-down to print user inclusions
+                const selector = document.getElementById('lang-select');
+                selector.innerHTML = '';
+                Object.keys(languageData).forEach(key => {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.innerText = `${languageData[key].flag} ${languageData[key].name}`;
+                    selector.appendChild(opt);
+                });
+            } else {
+                languageData = baseLanguageMatrix;
+                localStorage.setItem('custom_impara_matrix', JSON.stringify(languageData));
+            }
+        }
+
+        function toggleCreatorPanel() {
+            document.getElementById('creator-panel').classList.toggle('active');
+        }
+
+        function createNewLanguage() {
+            const name = document.getElementById('new-lang-name').value.trim();
+            const flag = document.getElementById('new-lang-flag').value.trim() || "🏳️";
+            const locale = document.getElementById('new-lang-locale').value.trim() || "en-US";
+            
+            if(!name) { alert("Please provide a language title identifier."); return; }
+            
+            const key = name.toLowerCase().substring(0, 3);
+            
+            // Build dynamic high-yield template base structures
+            languageData[key] = {
+                name: name,
+                locale: locale,
+                flag: flag,
+                vocab: [
+                    { it: "[Custom Key 1]", en: "Yes", cat: "essentials" },
+                    { it: "[Custom Key 2]", en: "No", cat: "essentials" },
+                    { it: "[Custom Key 3]", en: "Hello", cat: "greetings" },
+                    { it: "[Custom Key 4]", en: "How are you?", cat: "small-talk" }
+                ]
+            };
+
+            localStorage.setItem('custom_impara_matrix', JSON.stringify(languageData));
+            loadLanguagesEngine();
+            document.getElementById('lang-select').value = key;
+            handleLanguageChange();
+            toggleCreatorPanel();
+            
+            alert(`${name} has been added successfully! You can directly edit its dynamic translation files or vocabulary strings inside the local browser database.`);
+        }
 
         function handleLanguageChange() {
             currentLang = document.getElementById('lang-select').value;
